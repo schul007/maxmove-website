@@ -59,10 +59,3 @@ export default function BlogPage() {
     </div>
   )
 }
-
-ry
-
-r
-
-n
-

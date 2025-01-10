@@ -1,32 +1,32 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { MapsLoader } from '../components/maps-loader'
-import { useLanguage } from '../contexts/language-context'
-import { Loader2, MapPin, Package } from 'lucide-react'
+import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { MapsLoader } from '../components/maps-loader';
+import { useLanguage } from '../contexts/language-context';
+import { Loader2, MapPin, Package } from 'lucide-react';
 
 const OrderStatus = {
   PENDING: 'pending',
   PICKED_UP: 'picked_up',
   IN_TRANSIT: 'in_transit',
-  DELIVERED: 'delivered'
-}
+  DELIVERED: 'delivered',
+};
 
 interface Order {
-  id: string
-  status: string
-  driverLocation: { lat: number; lng: number }
-  destination: { lat: number; lng: number }
+  id: string;
+  status: string;
+  driverLocation: { lat: number; lng: number };
+  destination: { lat: number; lng: number };
 }
 
-export default function TrackOrderPage() {
-  const [order, setOrder] = useState<Order | null>(null)
-  const [map, setMap] = useState<google.maps.Map | null>(null)
-  const [driverMarker, setDriverMarker] = useState<google.maps.Marker | null>(null)
-  const searchParams = useSearchParams()
-  const orderId = searchParams.get('orderId')
-  const { language } = useLanguage()
+function TrackOrderPage() {
+  const [order, setOrder] = useState<Order | null>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [driverMarker, setDriverMarker] = useState<google.maps.Marker | null>(null);
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get('orderId');
+  const { language } = useLanguage();
 
   const t = {
     en: {
@@ -36,7 +36,7 @@ export default function TrackOrderPage() {
         [OrderStatus.PENDING]: 'Pending',
         [OrderStatus.PICKED_UP]: 'Picked Up',
         [OrderStatus.IN_TRANSIT]: 'In Transit',
-        [OrderStatus.DELIVERED]: 'Delivered'
+        [OrderStatus.DELIVERED]: 'Delivered',
       },
       estimatedArrival: 'Estimated arrival',
     },
@@ -47,11 +47,11 @@ export default function TrackOrderPage() {
         [OrderStatus.PENDING]: 'Ausstehend',
         [OrderStatus.PICKED_UP]: 'Abgeholt',
         [OrderStatus.IN_TRANSIT]: 'Unterwegs',
-        [OrderStatus.DELIVERED]: 'Geliefert'
+        [OrderStatus.DELIVERED]: 'Geliefert',
       },
       estimatedArrival: 'Geschätzte Ankunft',
-    }
-  }
+    },
+  };
 
   useEffect(() => {
     if (orderId) {
@@ -63,59 +63,67 @@ export default function TrackOrderPage() {
           status: OrderStatus.IN_TRANSIT,
           driverLocation: { lat: 52.520008, lng: 13.404954 }, // Berlin coordinates
           destination: { lat: 52.530008, lng: 13.414954 }, // Nearby location
-        }
-        setOrder(mockOrder)
-      }
-      fetchOrder()
+        };
+        setOrder(mockOrder);
+      };
+      fetchOrder();
     }
-  }, [orderId])
+  }, [orderId]);
 
   useEffect(() => {
-    if (map && order) {
-      const bounds = new google.maps.LatLngBounds()
-      bounds.extend(order.driverLocation)
-      bounds.extend(order.destination)
-      map.fitBounds(bounds)
+    if (!map || !order) return;
 
-      if (!driverMarker) {
-        const newDriverMarker = new google.maps.Marker({
-          position: order.driverLocation,
-          map: map,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: '#4285F4',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-          },
-        })
-        setDriverMarker(newDriverMarker)
-      } else {
-        driverMarker.setPosition(order.driverLocation)
-      }
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend(order.driverLocation);
+    bounds.extend(order.destination);
+    map.fitBounds(bounds);
 
-      new google.maps.Marker({
-        position: order.destination,
+    if (!driverMarker) {
+      const newDriverMarker = new google.maps.Marker({
+        position: order.driverLocation,
         map: map,
         icon: {
-          path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-          scale: 5,
-          fillColor: '#DB4437',
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: '#4285F4',
           fillOpacity: 1,
           strokeColor: '#ffffff',
           strokeWeight: 2,
         },
-      })
+      });
+      setDriverMarker(newDriverMarker);
+    } else {
+      driverMarker.setPosition(order.driverLocation);
     }
-  }, [map, order, driverMarker])
+
+    new google.maps.Marker({
+      position: order.destination,
+      map: map,
+      icon: {
+        path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+        scale: 5,
+        fillColor: '#DB4437',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+      },
+    });
+  }, [map, order, driverMarker]);
+
+  if (!orderId) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-lg text-gray-600">No order ID provided.</p>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
       </div>
-    )
+    );
   }
 
   return (
@@ -134,9 +142,9 @@ export default function TrackOrderPage() {
               <MapsLoader>
                 {(mapInstance) => {
                   if (mapInstance && !map) {
-                    setMap(mapInstance)
+                    setMap(mapInstance);
                   }
-                  return <div id="map" className="w-full h-full rounded-lg"></div>
+                  return <div id="map" className="w-full h-full rounded-lg"></div>;
                 }}
               </MapsLoader>
             </div>
@@ -154,6 +162,13 @@ export default function TrackOrderPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
+export default function TrackOrderPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TrackOrderPage />
+    </Suspense>
+  );
+}
